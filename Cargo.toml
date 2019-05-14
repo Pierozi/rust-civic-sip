@@ -1,0 +1,17 @@
+[package]
+name = "rust-civic-sip"
+version = "0.1.0"
+authors = ["Pierre Tomasina <tomasinap@pm.me>"]
+edition = "2019"
+repository = "https://github.com/pierozi/rust-civic-sip"
+documentation = "https://github.com/pierozi/rust-civic-sip/blob/master/README.md"
+readme = "README.md"
+keywords = ["blockchain", "civic", "sso", "jwt"]
+categories = ["authentication", "cryptography"]
+license = "BSD-3-Clause"
+publish=false
+
+[dependencies]
+jsonwebtoken = "6.0"
+signatory = { version = "0.11", features = ["ecdsa"] }
+
