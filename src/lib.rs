@@ -8,6 +8,7 @@ use chrono::Utc;
 use openssl::pkey::PKey;
 use serde::{Serialize, Deserialize};
 use serde_json::json;
+use hex;
 
 use sha2::Sha256;
 use hmac::{Hmac, Mac};
@@ -29,6 +30,7 @@ pub struct CivicSipConfig {
     pub app_id: &'static str,
     pub app_secret: &'static str,
     pub private_key: &'static str,
+    pub public_key: &'static str,
 }
 
 pub struct CivicSip {
@@ -64,17 +66,20 @@ impl CivicSip {
     /// The token is signed by the application private_key and secret.
     ///
     fn make_authorization_header(&self, body: serde_json::Value) -> String {
+        let mut context: openssl::bn::BigNumContext = openssl::bn::BigNumContext::new().unwrap();
         let group = openssl::ec::EcGroup::from_curve_name(openssl::nid::Nid::X9_62_PRIME256V1).unwrap();
-        let point = openssl::ec::EcPoint::new(&group).unwrap();
         let private_number = openssl::bn::BigNum::from_hex_str(&self.config.private_key).unwrap();
+        let public_point = openssl::ec::EcPoint::from_bytes(
+            &group,
+            hex::decode(&self.config.public_key).unwrap().as_slice(),
+            &mut context
+        ).unwrap();
         let eckey = openssl::ec::EcKey::from_private_components(
             &group,
             &private_number,
-            &point
+            &public_point
         ).unwrap();
         let private_key = eckey.private_key_to_pem().unwrap();
-
-        println!("{}", String::from_utf8(private_key.to_owned()).unwrap());
 
         let payload = json!({
             "jti": Uuid::new_v4(),
