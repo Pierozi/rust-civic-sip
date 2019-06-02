@@ -5,10 +5,14 @@ extern crate uuid;
 
 use uuid::Uuid;
 use chrono::Utc;
-use openssl::pkey::PKey;
 use serde::{Serialize, Deserialize};
 use serde_json::json;
-use hex;
+
+use openssl::{
+    pkey::Private,
+    ec::EcPoint, ec::EcGroup, ec::EcKey,
+    bn::BigNum, bn::BigNumContext,
+};
 
 use sha2::Sha256;
 use hmac::{Hmac, Mac};
@@ -30,7 +34,6 @@ pub struct CivicSipConfig {
     pub app_id: &'static str,
     pub app_secret: &'static str,
     pub private_key: &'static str,
-    pub public_key: &'static str,
 }
 
 pub struct CivicSip {
@@ -43,10 +46,8 @@ impl CivicSip {
     }
 
     /// Exchange the authorization code wrapped in a JWT token for the requested user data
+    ///
     /// # Arguments
-    ///
-    /// secp256r1 and NIST P-256 are the same @https://www.ietf.org/rfc/rfc5480.txt
-    ///
     /// * `jwt_token` - A string containing the authorization code (AC)
     ///
     pub fn exchange_code(&self, jwt_token: &str) -> String {
@@ -58,6 +59,44 @@ impl CivicSip {
         return authorization;
     }
 
+    /// Convert ECDSA private key from HEX to PEM
+    ///
+    /// secp256r1 and NIST P-256 are the same @https://www.ietf.org/rfc/rfc5480.txt
+    ///
+    fn get_private_key_pem(&self) -> Vec<u8> {
+        let private_number: BigNum = match BigNum::from_hex_str(&self.config.private_key) {
+            Ok(bn) => bn,
+            Err(error) => panic!("Error during parsing private key in hex, please check your configuration: {:?}", error),
+        };
+
+        let group: EcGroup = EcGroup::from_curve_name(openssl::nid::Nid::X9_62_PRIME256V1).unwrap();
+        let mut context: BigNumContext = BigNumContext::new().unwrap();
+
+        let mut public_point = EcPoint::new(&group).unwrap();
+        match public_point.mul_generator(
+            &group,
+            &private_number,
+            &mut context
+        ) {
+            Ok(_) => (),
+            Err(error) => panic!("Error during public key generation from private key. key must be ECDSA nist256 format: {:?}", error),
+        }
+
+        let eckey: EcKey<Private> = match EcKey::from_private_components(
+            &group,
+            &private_number,
+            &public_point
+        ) {
+            Ok(key) => key,
+            Err(error) => panic!("Error pub/pvt key construction: {:?}", error),
+        };
+
+        return match eckey.private_key_to_pem() {
+            Ok(pem) => pem,
+            Err(error) => panic!("Error during PEM conversion: {:?}", error),
+        };
+    }
+
     /// Create the value of Authorization header for the call of CIVIC API
     /// The token format: Civic requestToken.extToken
     /// where requestToken certifies the service path, method
@@ -66,21 +105,6 @@ impl CivicSip {
     /// The token is signed by the application private_key and secret.
     ///
     fn make_authorization_header(&self, body: serde_json::Value) -> String {
-        let mut context: openssl::bn::BigNumContext = openssl::bn::BigNumContext::new().unwrap();
-        let group = openssl::ec::EcGroup::from_curve_name(openssl::nid::Nid::X9_62_PRIME256V1).unwrap();
-        let private_number = openssl::bn::BigNum::from_hex_str(&self.config.private_key).unwrap();
-        let public_point = openssl::ec::EcPoint::from_bytes(
-            &group,
-            hex::decode(&self.config.public_key).unwrap().as_slice(),
-            &mut context
-        ).unwrap();
-        let eckey = openssl::ec::EcKey::from_private_components(
-            &group,
-            &private_number,
-            &public_point
-        ).unwrap();
-        let private_key = eckey.private_key_to_pem().unwrap();
-
         let payload = json!({
             "jti": Uuid::new_v4(),
             "iat": Utc::now().timestamp_millis() / 1000,
@@ -98,7 +122,13 @@ impl CivicSip {
             "typ": "JWT"
         });
 
-        let jwt_token = match frank_jwt::encode(header, &private_key, &payload, frank_jwt::Algorithm::ES256) {
+        let private_key: Vec<u8> = self.get_private_key_pem();
+        let jwt_token = match frank_jwt::encode(
+            header,
+            &private_key,
+            &payload,
+            frank_jwt::Algorithm::ES256
+        ) {
             Ok(token) => token,
             Err(error) => {
                 panic!("There was a problem during JWT ENCODE: {:?}", error);
