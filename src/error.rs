@@ -15,6 +15,12 @@ impl fmt::Display for CivicError {
             10403 => "CIVIC backend Forbidden",
             10404 => "CIVIC backend server not found",
             10500 => "CIVIC backend server error",
+
+            20100 => "JWT Signature fail",
+            20101 => "JWT Bad Signature",
+
+            20200 => "AES decryption error",
+
             _ => "Sorry, something is wrong! Please Try Again!",
         };
 

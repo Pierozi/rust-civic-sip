@@ -1,7 +1,7 @@
 build:
 	clear
 	cargo build
-	cargo test
+	RUST_BACKTRACE=full RUST_BACKTRACE=1 cargo test
 
 run:
 	RUST_BACKTRACE=full RUST_BACKTRACE=1 cargo run

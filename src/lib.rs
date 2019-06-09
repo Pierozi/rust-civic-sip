@@ -5,21 +5,15 @@ extern crate uuid;
 extern crate reqwest;
 
 mod error;
+mod crypto;
 
 use uuid::Uuid;
 use chrono::Utc;
 use serde::{Serialize, Deserialize};
-use serde_json::json;
+use serde_json::{json, Value as JsonValue};
 use reqwest::header::{CONTENT_TYPE, CONTENT_LENGTH, ACCEPT, AUTHORIZATION};
 use reqwest::StatusCode;
 use error::CivicError;
-
-use openssl::{
-    pkey::Private,
-    ec::EcPoint, ec::EcGroup, ec::EcKey,
-    bn::BigNum, bn::BigNumContext,
-};
-
 use sha2::Sha256;
 use hmac::{Hmac, Mac};
 
@@ -29,12 +23,6 @@ type HmacSha256 = Hmac<Sha256>;
 const CIVIC_SIP_API_URL: &'static str = "https://api.civic.com/sip";
 const CIVIC_SIP_API_PUB: &'static str = "049a45998638cfb3c4b211d72030d9ae8329a242db63bfb0076a54e7647370a8ac5708b57af6065805d5a6be72332620932dbb35e8d318fce18e7c980a0eb26aa1";
 const CIVIC_JWT_EXPIRATION: i64 = 180; // 3 min
-
-#[derive(Serialize, Deserialize)]
-struct Claims {
-    sub: String,
-    company: String,
-}
 
 #[derive(Deserialize)]
 struct Payload {
@@ -46,17 +34,32 @@ pub struct CivicSipConfig {
     pub app_id: &'static str,
     pub app_secret: &'static str,
     pub private_key: &'static str,
-    pub env: &'static str,
     pub proxy: Option<&'static str>,
 }
 
+pub enum CivicEnv {
+    Prod,
+    Dev,
+}
+
 pub struct CivicSip {
-    config: CivicSipConfig
+    config: CivicSipConfig,
+    env: &'static str,
 }
 
 impl CivicSip {
-    pub fn new(config: CivicSipConfig) -> CivicSip {
-        CivicSip { config }
+    pub fn new(config: CivicSipConfig, civic_env: Option<CivicEnv>) -> CivicSip {
+        let env = match civic_env {
+            None => "prod",
+            Some(civic_env_enum) => match civic_env_enum {
+                CivicEnv::Prod => "prod",
+                CivicEnv::Dev => "dev",
+            }
+        };
+        CivicSip {
+            config,
+            env,
+        }
     }
 
     /// Exchange the authorization code wrapped in a JWT token for the requested user data
@@ -64,7 +67,7 @@ impl CivicSip {
     /// # Arguments
     /// * `jwt_token` - A string containing the authorization code (AC)
     ///
-    pub fn exchange_code(&self, jwt_token: &str) -> Result<&'static str, CivicError> {
+    pub fn exchange_code(&self, jwt_token: &str) -> Result<JsonValue, CivicError> {
         let body: String = json!({
             "authToken": jwt_token,
             "processPayload": true,
@@ -79,7 +82,7 @@ impl CivicSip {
         };
 
         let mut response = client.post(
-            format!("{}/{}/scopeRequest/authCode", CIVIC_SIP_API_URL, &self.config.env).as_str()
+            format!("{}/{}/scopeRequest/authCode", CIVIC_SIP_API_URL, &self.env).as_str()
             )
             .header(AUTHORIZATION, auth_header)
             .header(CONTENT_LENGTH, body.len())
@@ -119,44 +122,6 @@ impl CivicSip {
         };
     }
 
-    /// Convert ECDSA private key from HEX to PEM
-    ///
-    /// secp256r1 and NIST P-256 are the same @https://www.ietf.org/rfc/rfc5480.txt
-    ///
-    fn get_private_key_pem(&self) -> Vec<u8> {
-        let private_number: BigNum = match BigNum::from_hex_str(&self.config.private_key) {
-            Ok(bn) => bn,
-            Err(error) => panic!("Error during parsing private key in hex, please check your configuration: {:?}", error),
-        };
-
-        let group: EcGroup = EcGroup::from_curve_name(openssl::nid::Nid::X9_62_PRIME256V1).unwrap();
-        let mut context: BigNumContext = BigNumContext::new().unwrap();
-
-        let mut public_point = EcPoint::new(&group).unwrap();
-        match public_point.mul_generator(
-            &group,
-            &private_number,
-            &mut context
-        ) {
-            Ok(_) => (),
-            Err(error) => panic!("Error during public key generation from private key. key must be ECDSA nist256 format: {:?}", error),
-        }
-
-        let eckey: EcKey<Private> = match EcKey::from_private_components(
-            &group,
-            &private_number,
-            &public_point
-        ) {
-            Ok(key) => key,
-            Err(error) => panic!("Error pub/pvt key construction: {:?}", error),
-        };
-
-        return match eckey.private_key_to_pem() {
-            Ok(pem) => pem,
-            Err(error) => panic!("Error during PEM conversion: {:?}", error),
-        };
-    }
-
     /// Create the value of Authorization header for the call of CIVIC API
     /// The token format: Civic requestToken.extToken
     /// where requestToken certifies the service path, method
@@ -182,7 +147,7 @@ impl CivicSip {
             "typ": "JWT"
         });
 
-        let private_key: Vec<u8> = self.get_private_key_pem();
+        let private_key: Vec<u8> = crypto::get_private_key_pem(&self.config.private_key);
         let jwt_token = match frank_jwt::encode(
             header,
             &private_key,
@@ -204,10 +169,14 @@ impl CivicSip {
                        base64::encode(&mac.result().code().to_owned()));
     }
 
-    fn process_payload(&self, payload: Payload) -> Result<&'static str, CivicError> {
-        return Err(CivicError {
-            code: 1,
-            message: format!("DEBUG: {:?}", payload.data),
-        })
+    fn process_payload(&self, payload: Payload) -> Result<JsonValue, CivicError> {
+        return match crypto::decode(&payload.data, CIVIC_SIP_API_PUB) {
+            Err(error) => Err(error),
+            Ok((jwt_header, jwt_payload)) => {
+                print!("{}", jwt_header);
+                print!("{}", jwt_payload);
+                return crypto::decrypt(&jwt_payload.as_str().unwrap(), &self.config.app_secret);
+            }
+        };
     }
 }
