@@ -1,5 +1,5 @@
 workflow "Rust CI" {
-  on = "pull_request"
+  on = "push"
   resolves = ["rust-ci"]
 }
 
