@@ -27,11 +27,11 @@ let config: CivicSipConfig = CivicSipConfig {
     app_id: dotenv!("CIVIC_APP_ID"),
     app_secret: dotenv!("CIVIC_APP_SECRET"),
     private_key: dotenv!("CIVIC_PRIVATE_KEY"),
+    proxy: None,
 };
 
 let sip: CivicSip = CivicSip::new(config);
-
-return sip.exchange_code("AC Token build on frontend CIVIC oAuth");
+let data: serde_json::Value = sip.exchange_code("AC JWT Token return by CIVIC Frontend oAuth").unwrap();
 ```
 
 ## License
