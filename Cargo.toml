@@ -9,7 +9,7 @@ readme = "README.md"
 keywords = ["blockchain", "civic", "sso", "jwt"]
 categories = ["authentication", "cryptography"]
 license = "BSD-3-Clause"
-publish=false
+publish=true
 
 [dependencies]
 frank_jwt = "3.1"

@@ -1,6 +1,6 @@
 # Rust CIVIC SIP API
 
-![unstable]
+![badge](https://action-badges.now.sh/Pierozi/rust-civic-sip?action=rust-ci)
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
 ![BSD-3-Clause licensed][license-image]
@@ -39,7 +39,6 @@ let data: serde_json::Value = sip.exchange_code("AC JWT Token return by CIVIC Fr
 **civic-sip** is distributed under the terms of either the BSD-3-Clause license.
 See [LICENSE](LICENSE) for details.
 
-[unstable]: https://img.shields.io/badge/version-unstable-red.svg
 [crate-image]: https://img.shields.io/crates/v/civic-sip.svg
 [crate-link]: https://crates.io/crates/civic-sip
 [docs-image]: https://docs.rs/civic-sip/badge.svg
