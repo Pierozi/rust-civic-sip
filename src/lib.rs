@@ -4,12 +4,12 @@ extern crate chrono;
 extern crate uuid;
 extern crate reqwest;
 
-mod error;
-mod crypto;
+pub mod error;
+pub mod crypto;
 
 use uuid::Uuid;
 use chrono::Utc;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize};
 use serde_json::{json, Value as JsonValue};
 use reqwest::header::{CONTENT_TYPE, CONTENT_LENGTH, ACCEPT, AUTHORIZATION};
 use reqwest::StatusCode;
@@ -169,13 +169,13 @@ impl CivicSip {
                        base64::encode(&mac.result().code().to_owned()));
     }
 
+    /// Process CIVIC response
+    /// decrypt data using app secret and return result as JsonValue
     fn process_payload(&self, payload: Payload) -> Result<JsonValue, CivicError> {
         return match crypto::decode(&payload.data, CIVIC_SIP_API_PUB) {
             Err(error) => Err(error),
-            Ok((jwt_header, jwt_payload)) => {
-                print!("{}", jwt_header);
-                print!("{}", jwt_payload);
-                return crypto::decrypt(&jwt_payload.as_str().unwrap(), &self.config.app_secret);
+            Ok((_, jwt_payload)) => {
+                return crypto::decrypt(jwt_payload["data"].as_str().unwrap(), &self.config.app_secret);
             }
         };
     }
