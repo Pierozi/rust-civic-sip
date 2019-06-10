@@ -41,7 +41,7 @@ impl fmt::Debug for CivicError {
 
 impl std::convert::From<reqwest::Error> for CivicError {
     fn from(error: reqwest::Error) -> Self {
-        return CivicError {
+        CivicError {
             code: 1,
             message: error.to_string(),
         }

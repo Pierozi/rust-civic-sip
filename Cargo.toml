@@ -1,15 +1,20 @@
 [package]
 name = "civic_sip"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Pierre Tomasina <tomasinap@pm.me>"]
+description = "SDK of Civic hosted SIP API"
 edition = "2018"
 repository = "https://github.com/pierozi/rust-civic-sip"
-documentation = "https://github.com/pierozi/rust-civic-sip/blob/master/README.md"
+documentation = "https://docs.rs/civic_sip"
 readme = "README.md"
 keywords = ["blockchain", "civic", "sso", "jwt"]
 categories = ["authentication", "cryptography"]
 license = "BSD-3-Clause"
-publish=false
+publish=true
+include = [
+  "src/*.rs",
+  "Cargo.toml",
+]
 
 [dependencies]
 frank_jwt = "3.1"
