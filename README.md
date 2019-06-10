@@ -14,13 +14,13 @@ NON OFFICIAL Rust library based on the official Node.js wrapper (see [npm-civic-
 Add the following to Cargo.toml:
 
 ```toml
-civic-sip = "0.1"
+civic_sip = "0.1"
 ```
 
 ### How to use
 
 ```rust
-extern civic-sip as civic;
+extern civic_sip as civic;
 use civic::{CivicSip, CivicSipConfig};
 
 let config: CivicSipConfig = CivicSipConfig {
@@ -39,9 +39,9 @@ let data: serde_json::Value = sip.exchange_code("AC JWT Token return by CIVIC Fr
 **civic-sip** is distributed under the terms of either the BSD-3-Clause license.
 See [LICENSE](LICENSE) for details.
 
-[crate-image]: https://img.shields.io/crates/v/civic-sip.svg
-[crate-link]: https://crates.io/crates/civic-sip
-[docs-image]: https://docs.rs/civic-sip/badge.svg
-[docs-link]: https://docs.rs/civic-sip/
-[license-image]: https://img.shields.io/crates/l/civic-sip.svg
+[crate-image]: https://img.shields.io/crates/v/civic_sip.svg
+[crate-link]: https://crates.io/crates/civic_sip
+[docs-image]: https://docs.rs/civic_sip/badge.svg
+[docs-link]: https://docs.rs/civic_sip/
+[license-image]: https://img.shields.io/crates/l/civic_sip.svg
 
