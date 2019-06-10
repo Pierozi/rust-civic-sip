@@ -1,6 +1,6 @@
 [package]
 name = "civic_sip"
-version = "0.1.1"
+version = "0.1.0"
 authors = ["Pierre Tomasina <tomasinap@pm.me>"]
 description = "SDK of Civic hosted SIP API"
 edition = "2018"
