@@ -23,3 +23,6 @@ hmac = "0.7"
 sha2 = "0.8"
 reqwest = "0.9"
 hex = "0.3"
+
+[[example]]
+name = "exchange_code"

@@ -33,12 +33,7 @@ pub fn get_public_key_from_hex(public_key: &str) -> Vec<u8> {
     let eckey: EcKey<Public> = EcKey::from_public_key(&group, &point).unwrap();
 
     let pkey = PKey::from_ec_key(eckey).unwrap();
-    let pub_key: Vec<u8> = pkey.public_key_to_pem().unwrap();
-
-    //let pub_key = public_number.to_vec();
-    println!("{:?}", str::from_utf8(&pub_key.as_slice()).unwrap());
-
-    return pub_key;
+    return pkey.public_key_to_pem().unwrap();
 }
 
 /// Convert ECDSA private key from HEX to PEM

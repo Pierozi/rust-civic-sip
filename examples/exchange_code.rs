@@ -2,6 +2,9 @@ extern crate civic_sip as civic;
 use civic::{CivicSip, CivicSipConfig};
 use Option::None;
 
+/// The following variables are fake one
+/// In order to execute the test, you have to register a Civic Application
+
 // This is the AC (Authorized Code) returned by CIVIC Frontend app
 // AC are encoded as a JWT token
 const AC_JWT: &'static str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMDU1MmE2Yy03Nzc3LTQ5ZTAtOWNkYy1kNTU3ZjgwM2Q1ZjUiLCJpYXQiOjE1NjAxMjM3NzEuOTMsImV4cCI6MTU2MDEyNTU3MS45MywiaXNzIjoiY2l2aWMtc2lwLWhvc3RlZC1zZXJ2aWNlIiwiYXVkIjoiaHR0cHM6Ly9hcGkuY2l2aWMuY29tL3NpcC8iLCJzdWIiOiJhYmNfeHh4eDAiLCJkYXRhIjp7ImNvZGVUb2tlbiI6ImQ4OTYwYWU3LWRkY2EtNGEwOS1hNDFlLWRhMDk4NDY2ZDNhZiJ9fQ.35ZcMDeaKNWKeJ-XKi1kpD1gILaCKccat6aiQw2_-fw";
