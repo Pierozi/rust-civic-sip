@@ -20,7 +20,7 @@ civic_sip = "0.1"
 ### How to use
 
 ```rust
-extern civic_sip as civic;
+extern crate civic_sip as civic;
 use civic::{CivicSip, CivicSipConfig};
 
 let config: CivicSipConfig = CivicSipConfig {

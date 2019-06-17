@@ -10,16 +10,16 @@ impl fmt::Display for CivicError {
         let err_msg = match self.code {
             1 => "UNKNOWN error",
 
-            10400 => "CIVIC backend request incorrect 400",
-            10401 => "CIVIC backend Unauthorized",
-            10403 => "CIVIC backend Forbidden",
-            10404 => "CIVIC backend server not found",
-            10500 => "CIVIC backend server error",
+            100_400 => "CIVIC backend request incorrect 400",
+            100_401 => "CIVIC backend Unauthorized",
+            100_403 => "CIVIC backend Forbidden",
+            100_404 => "CIVIC backend server not found",
+            100_500 => "CIVIC backend server error",
 
-            20100 => "JWT Signature fail",
-            20101 => "JWT Bad Signature",
+            200_100 => "JWT Signature fail",
+            200_101 => "JWT Bad Signature",
 
-            20200 => "AES decryption error",
+            200_200 => "AES decryption error",
 
             _ => "Sorry, something is wrong! Please Try Again!",
         };

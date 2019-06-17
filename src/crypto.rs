@@ -93,14 +93,14 @@ pub fn decode(token: &str, pub_key: &str) -> Result<(JsonValue, JsonValue), Civi
 
     if validate_result.is_err() {
         return Err(CivicError {
-            code: 20100,
+            code: 200_100,
             message: String::from("JWT validation signature fail!"),
         });
     }
 
     if !validate_result.unwrap() {
         return Err(CivicError {
-            code: 20101,
+            code: 200_101,
             message: String::from("JWT token bad signature"),
         });
     }
@@ -109,7 +109,7 @@ pub fn decode(token: &str, pub_key: &str) -> Result<(JsonValue, JsonValue), Civi
 
     if result.is_err() {
         return Err(CivicError {
-            code: 20102,
+            code: 200_102,
             message: String::from("JWT decode fail!"),
         });
     }
@@ -147,7 +147,7 @@ pub fn decrypt(data: &str, secret: &str) -> Result<JsonValue, CivicError> {
     ) {
         Ok(out) => Ok(serde_json::from_slice(out.as_slice()).unwrap()),
         Err(error) => Err(CivicError {
-            code: 20200,
+            code: 200_200,
             message: format!("JWT decrypt error: {:?}", error),
         }),
     }
