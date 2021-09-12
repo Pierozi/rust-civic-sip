@@ -105,7 +105,12 @@ pub fn decode(token: &str, pub_key: &str) -> Result<(JsonValue, JsonValue), Civi
         });
     }
 
-    let result = jwt::decode(&token, &public_key, frank_jwt::Algorithm::ES256);
+    let result = jwt::decode(
+        &token,
+        &public_key,
+        frank_jwt::Algorithm::ES256,
+        &frank_jwt::ValidationOptions::default(),
+    );
 
     if result.is_err() {
         return Err(CivicError {
