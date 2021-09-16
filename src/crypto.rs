@@ -20,7 +20,7 @@ use std::str;
 /// assert_eq!(expected, hex::encode(pub_pem.as_slice()));
 /// ```
 pub fn get_public_key_from_hex(public_key: &str) -> Vec<u8> {
-    let public_number: BigNum = match BigNum::from_hex_str(&public_key) {
+    let public_number: BigNum = match BigNum::from_hex_str(public_key) {
         Ok(bn) => bn,
         Err(error) => panic!(
             "Error during parsing public key in hex, please check your configuration: {:?}",
@@ -54,7 +54,7 @@ pub fn get_public_key_from_hex(public_key: &str) -> Vec<u8> {
 /// assert_eq!(expected, hex::encode(pem.as_slice()));
 /// ```
 pub fn get_private_key_pem(private_key: &str) -> Vec<u8> {
-    let private_number: BigNum = match BigNum::from_hex_str(&private_key) {
+    let private_number: BigNum = match BigNum::from_hex_str(private_key) {
         Ok(bn) => bn,
         Err(error) => panic!(
             "Error during parsing private key in hex, please check your configuration: {:?}",
@@ -88,8 +88,8 @@ pub fn get_private_key_pem(private_key: &str) -> Vec<u8> {
 }
 
 pub fn decode(token: &str, pub_key: &str) -> Result<(JsonValue, JsonValue), CivicError> {
-    let public_key = get_public_key_from_hex(&pub_key);
-    let validate_result = jwt::validate_signature(&token, &public_key, frank_jwt::Algorithm::ES256);
+    let public_key = get_public_key_from_hex(pub_key);
+    let validate_result = jwt::validate_signature(token, &public_key, frank_jwt::Algorithm::ES256);
 
     if validate_result.is_err() {
         return Err(CivicError {
@@ -105,7 +105,12 @@ pub fn decode(token: &str, pub_key: &str) -> Result<(JsonValue, JsonValue), Civi
         });
     }
 
-    let result = jwt::decode(&token, &public_key, frank_jwt::Algorithm::ES256);
+    let result = jwt::decode(
+        token,
+        &public_key,
+        frank_jwt::Algorithm::ES256,
+        &frank_jwt::ValidationOptions::default(),
+    );
 
     if result.is_err() {
         return Err(CivicError {

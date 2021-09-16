@@ -144,7 +144,7 @@ impl CivicSip {
             "typ": "JWT"
         });
 
-        let private_key: Vec<u8> = crypto::get_private_key_pem(&self.config.private_key);
+        let private_key: Vec<u8> = crypto::get_private_key_pem(self.config.private_key);
         let jwt_token =
             match frank_jwt::encode(header, &private_key, &payload, frank_jwt::Algorithm::ES256) {
                 Ok(token) => token,
@@ -171,7 +171,7 @@ impl CivicSip {
             Err(error) => Err(error),
             Ok((_, jwt_payload)) => crypto::decrypt(
                 jwt_payload["data"].as_str().unwrap(),
-                &self.config.app_secret,
+                self.config.app_secret,
             ),
         }
     }
